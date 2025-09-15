@@ -10,8 +10,7 @@ import { ApiResponseDto } from '../../tasks/dto/responses/api-response.dto';
 
 @Injectable()
 export class ResponseInterceptor<T>
-    implements NestInterceptor<T, ApiResponseDto<T>>
-{
+    implements NestInterceptor<T, ApiResponseDto<T>> {
     intercept(
         context: ExecutionContext,
         next: CallHandler,
