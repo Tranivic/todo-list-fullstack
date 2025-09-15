@@ -35,11 +35,39 @@ export class HttpExceptionFilter implements ExceptionFilter {
             exception instanceof Error ? exception.stack : 'Unknown error',
         );
 
+        let errorType = 'UnknownError';
+        if (exception instanceof HttpException) {
+            switch (status) {
+                case HttpStatus.NOT_FOUND:
+                    errorType = 'NotFoundError';
+                    break;
+                case HttpStatus.BAD_REQUEST:
+                    errorType = 'BadRequestError';
+                    break;
+                case HttpStatus.UNAUTHORIZED:
+                    errorType = 'UnauthorizedError';
+                    break;
+                case HttpStatus.FORBIDDEN:
+                    errorType = 'ForbiddenError';
+                    break;
+                case HttpStatus.CONFLICT:
+                    errorType = 'ConflictError';
+                    break;
+                case HttpStatus.UNPROCESSABLE_ENTITY:
+                    errorType = 'ValidationError';
+                    break;
+                default:
+                    errorType = exception.constructor.name;
+            }
+        } else if (exception instanceof Error) {
+            errorType = exception.constructor.name;
+        }
+
         const errorResponse = new ApiResponseDto(
             false,
             message,
             null,
-            exception instanceof Error ? exception.message : 'Unknown error',
+            errorType,
             request.url,
         );
 
