@@ -10,6 +10,7 @@ import {
     HttpStatus,
     Query,
     UseInterceptors,
+    UseFilters
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/requests/create-task.dto';
@@ -20,8 +21,10 @@ import { TaskResponseDto } from './dto/responses/task-response.dto';
 import { ApiResponseDto } from './dto/responses/api-response.dto';
 import { PaginatedResponseDto } from './dto/responses/paginated-response.dto';
 import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
+import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 
 @Controller('tasks')
+@UseFilters(HttpExceptionFilter)
 @UseInterceptors(ResponseInterceptor)
 export class TasksController {
     constructor(private readonly tasksService: TasksService) { }
