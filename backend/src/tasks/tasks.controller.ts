@@ -1,42 +1,69 @@
 import {
-	Controller,
-	Get,
-	Post,
-	Body,
-	Patch,
-	Param,
-	Delete,
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    HttpCode,
+    HttpStatus,
+    Query,
+    UseInterceptors,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { CreateTaskDto } from './dto/requests/create-task.dto';
+import { UpdateTaskDto } from './dto/requests/update-task.dto';
+import { TaskParamsDto } from './dto/requests/task-params.dto';
+import { PaginationQueryDto } from './dto/requests/pagination-query.dto';
+import { TaskResponseDto } from './dto/responses/task-response.dto';
+import { ApiResponseDto } from './dto/responses/api-response.dto';
+import { PaginatedResponseDto } from './dto/responses/paginated-response.dto';
+import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
 
 @Controller('tasks')
+@UseInterceptors(ResponseInterceptor)
 export class TasksController {
-	constructor(private readonly tasksService: TasksService) {}
+    constructor(private readonly tasksService: TasksService) { }
 
-	@Post()
-	create(@Body() createTaskDto: CreateTaskDto) {
-		return this.tasksService.create(createTaskDto);
-	}
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    async findAll(
+        @Query() query: PaginationQueryDto,
+    ): Promise<ApiResponseDto<PaginatedResponseDto<TaskResponseDto>>> {
+        const result = await this.tasksService.findAll(query.page, query.limit);
+        return new ApiResponseDto(true, 'Tasks fetched successfully', result);
+    }
 
-	@Get()
-	findAll() {
-		return this.tasksService.findAll();
-	}
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    async create(
+        @Body() createTaskDto: CreateTaskDto,
+    ): Promise<ApiResponseDto<TaskResponseDto>> {
+        const task = await this.tasksService.create(createTaskDto);
+        return new ApiResponseDto(true, 'Task created successfully', task);
+    }
 
-	@Get(':id')
-	findOne(@Param('id') id: string) {
-		return this.tasksService.findOne(+id);
-	}
+    @Patch(':id/edit')
+    @HttpCode(HttpStatus.OK)
+    async update(
+        @Param() params: TaskParamsDto,
+        @Body() updateTaskDto: UpdateTaskDto,
+    ): Promise<ApiResponseDto<TaskResponseDto>> {
+        const task = await this.tasksService.update(params.id, updateTaskDto);
+        return new ApiResponseDto(true, 'Task updated successfully', task);
+    }
 
-	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-		return this.tasksService.update(+id, updateTaskDto);
-	}
+    @Patch(':id/done')
+    @HttpCode(HttpStatus.OK)
+    async markAsDone(@Param() params: TaskParamsDto): Promise<ApiResponseDto<TaskResponseDto>> {
+        const task = await this.tasksService.update(params.id, { isCompleted: true });
+        return new ApiResponseDto(true, 'Task marked as completed', task);
+    }
 
-	@Delete(':id')
-	remove(@Param('id') id: string) {
-		return this.tasksService.remove(+id);
-	}
+    @Delete(':id')
+    async remove(@Param() params: TaskParamsDto): Promise<{ message: string }> {
+        await this.tasksService.remove(params.id);
+        return { message: 'Task deleted successfully' };
+    }
 }
