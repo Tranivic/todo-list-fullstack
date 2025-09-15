@@ -1,0 +1,34 @@
+# Dependências
+node_modules
+**/node_modules
+
+# Builds e cache
+.nuxt
+.output
+.nuxt-build.lock
+dist
+static
+.cache
+.pnpm-store
+
+# Logs e debug
+npm-debug*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Git e configs
+.git
+.gitignore
+.dockerignore
+.env
+.env.local
+.env.*.local
+
+# Testes e coverage
+coverage
+test
+**/*.spec.ts
+**/*.test.ts
+jest.config.js
