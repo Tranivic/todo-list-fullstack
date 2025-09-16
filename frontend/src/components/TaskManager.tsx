@@ -1,11 +1,13 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useTasks } from '@/hooks/useTasks';
+import { TaskForm } from '@/components/TaskForm';
 import { TaskList } from '@/components/TaskList';
 import { PaginationControls } from '@/components/PaginationControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CreateTaskRequest } from '@/types/task';
 
 interface TaskManagerProps {
-  currentPage: number;
+    currentPage: number;
 }
 
 export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
@@ -13,14 +15,18 @@ export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
         tasks,
         isLoading,
         isOperationLoading,
-        error,
         pagination,
+        createTask,
         updateTask,
         toggleTaskCompletion,
         deleteTask,
         goToPage,
-        refetch,
     } = useTasks(currentPage);
+
+    const handleCreateTask = useCallback(async (title: string, description: string): Promise<void> => {
+        const taskData: CreateTaskRequest = { title, description };
+        await createTask(taskData);
+    }, [createTask]);
 
     const handlePageChange = useCallback(async (page: number): Promise<void> => {
         await goToPage(page);
@@ -28,6 +34,10 @@ export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
 
     return (
         <div className="container mx-auto p-4">
+            {/* Task Form */}
+            <section className="mb-8" aria-label="Create new task">
+                <TaskForm onSubmit={handleCreateTask} isLoading={isOperationLoading} />
+            </section>
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">

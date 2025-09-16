@@ -1,5 +1,6 @@
 import {
     Task,
+    CreateTaskRequest,
     UpdateTaskRequest,
     TasksResponse,
     PaginationParams,
@@ -44,6 +45,18 @@ export const taskService = {
 
         const response = await fetch(url.toString());
         return handleApiResponse<TasksResponse>(response);
+    },
+
+    async createTask(task: CreateTaskRequest): Promise<Task> {
+        const response = await fetch(API_BASE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(task),
+        });
+
+        return handleApiResponse<Task>(response);
     },
 
     async updateTask(id: string, updates: UpdateTaskRequest): Promise<Task> {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Task, PaginationParams, TasksResponse } from '@/types/task';
+import { Task, CreateTaskRequest, PaginationParams, TasksResponse } from '@/types/task';
 import { taskService } from '@/services/taskService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +18,7 @@ interface UseTasksState {
 }
 
 interface UseTasksReturn extends UseTasksState {
+    createTask: (taskData: CreateTaskRequest) => Promise<void>;
     updateTask: (id: string, title: string, description: string, isCompleted: boolean) => Promise<void>;
     toggleTaskCompletion: (id: string) => Promise<void>;
     deleteTask: (id: string) => Promise<void>;
@@ -96,6 +97,38 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
             setLoading(false);
         }
     }, [state.pagination.currentPage, setLoading, setError, toast, updatePagination]);
+
+    const createTask = useCallback(async (taskData: CreateTaskRequest): Promise<void> => {
+        if (!taskData.title.trim()) {
+            toast({
+                title: 'Validation Error',
+                description: 'Task title is required',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setOperationLoading(true);
+
+        try {
+            await taskService.createTask(taskData);
+            toast({
+                title: 'Success',
+                description: 'Task created successfully',
+            });
+
+            await fetchTasks({ page: initialPage, limit: ITEMS_PER_PAGE });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
+            toast({
+                title: 'Error',
+                description: errorMessage,
+                variant: 'destructive',
+            });
+        } finally {
+            setOperationLoading(false);
+        }
+    }, [toast, setOperationLoading, fetchTasks]);
 
     const updateTask = useCallback(async (id: string, title: string, description: string, isCompleted: boolean): Promise<void> => {
         if (!title.trim()) {
@@ -203,6 +236,7 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
 
     return {
         ...state,
+        createTask,
         updateTask,
         toggleTaskCompletion,
         deleteTask,
