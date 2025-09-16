@@ -29,7 +29,7 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest {
     title?: string;
     description?: string;
-    isCompleted?: boolean;
+    isCompleted: boolean;
 }
 
 export interface TasksResponse {

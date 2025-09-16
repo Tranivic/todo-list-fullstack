@@ -1,9 +1,14 @@
-import React from 'react';
+import { TaskContainer } from "@/components/TaskContainer"
 
 const Index: React.FC = () => {
     return (
-        <div>
-            <h1>Hello, World!</h1>
+        <div className="min-h-screen bg-background">
+            <div className="container mx-auto px-4 py-8 max-w-4xl">
+                {/* Tasks */}
+                <main>
+                    <TaskContainer />
+                </main>
+            </div>
         </div>
     );
 };
