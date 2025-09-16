@@ -4,11 +4,11 @@ import { TaskList } from '@/components/TaskList';
 import { PaginationControls } from '@/components/PaginationControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface TaskContainerProps {
+interface TaskManagerProps {
   currentPage: number;
 }
 
-export const TaskContainer: React.FC<TaskContainerProps> = ({ currentPage }) => {
+export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
     const {
         tasks,
         isLoading,

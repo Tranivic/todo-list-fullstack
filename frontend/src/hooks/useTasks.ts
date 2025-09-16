@@ -27,7 +27,7 @@ interface UseTasksReturn extends UseTasksState {
 
 const ITEMS_PER_PAGE = 10;
 
-export const useTasks = (initialPage: number = 1): UseTasksReturn => {
+export const useTasks = (initialPage: number): UseTasksReturn => {
     const navigate = useNavigate();
     const [state, setState] = useState<UseTasksState>({
         tasks: [],

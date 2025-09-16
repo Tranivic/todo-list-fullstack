@@ -1,4 +1,4 @@
-import { TaskContainer } from "@/components/TaskContainer"
+import { TaskManager } from "@/components/TaskManager"
 
 const Index: React.FC = () => {
     return (
@@ -6,7 +6,7 @@ const Index: React.FC = () => {
             <div className="container mx-auto px-4 py-8 max-w-4xl">
                 {/* Tasks */}
                 <main>
-                    <TaskContainer />
+                    <TaskManager currentPage={1} />
                 </main>
             </div>
         </div>

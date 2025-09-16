@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { TaskContainer } from "@/components/TaskContainer";
+import { TaskManager } from "@/components/TaskManager";
 
 const TasksPage: React.FC = () => {
     const { page } = useParams<{ page: string }>();
@@ -23,7 +23,7 @@ const TasksPage: React.FC = () => {
             <div className="container mx-auto px-4 py-8 max-w-4xl">
                 {/* Tasks */}
                 <main>
-                    <TaskContainer currentPage={currentPage} />
+                    <TaskManager currentPage={currentPage} />
                 </main>
             </div>
         </div>
