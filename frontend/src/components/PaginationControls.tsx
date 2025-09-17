@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
 interface PaginationControlsProps {
@@ -21,7 +21,9 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
 
     const navigate = useNavigate();
     const params = useParams<{ page?: string }>();
-
+    const [searchParams] = useSearchParams();
+    const searchQuery = searchParams.get('q');
+    
     const effectiveCurrentPage = useMemo(() => {
         const fromUrl = params.page ? parseInt(params.page, 10) : NaN;
         if (!Number.isNaN(fromUrl) && fromUrl >= 1) return Math.min(fromUrl, totalPages);
@@ -30,15 +32,20 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
     }, [params.page, currentPage, totalPages]);
 
     const safeNavigateTo = useCallback(
-        (page: number) => {
-            if (isLoading) return;
-            const clamped = Math.max(1, Math.min(page, totalPages));
-
-            onPageChange?.(clamped);
+    (page: number) => {
+        if (isLoading) return;
+        const clamped = Math.max(1, Math.min(page, totalPages));
+        
+        onPageChange?.(clamped);
+        
+        if (searchQuery) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}&page=${clamped}`);
+        } else {
             navigate(`${basePath}/${clamped}`);
-        },
-        [isLoading, totalPages, onPageChange, navigate, basePath]
-    );
+        }
+    },
+    [isLoading, totalPages, onPageChange, navigate, basePath, searchQuery]
+);
 
     const generatePageNumbers = useCallback((): (number | 'ellipsis')[] => {
         const pages: (number | 'ellipsis')[] = [];

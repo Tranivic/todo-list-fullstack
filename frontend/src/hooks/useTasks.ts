@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Task, CreateTaskRequest, PaginationParams, TasksResponse } from '@/types/task';
 import { taskService } from '@/services/taskService';
 import { useToast } from '@/hooks/use-toast';
@@ -23,13 +23,17 @@ interface UseTasksReturn extends UseTasksState {
     toggleTaskCompletion: (id: string) => Promise<void>;
     deleteTask: (id: string) => Promise<void>;
     goToPage: (page: number) => Promise<void>;
-    refetch: () => Promise<void>;
+    searchTask: (searchQuery: string) => Promise<void>;
 }
 
 const ITEMS_PER_PAGE = 10;
 
 export const useTasks = (initialPage: number): UseTasksReturn => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const searchQuery = searchParams.get('q') || '';
+    const pageFromUrl = searchParams.get('page') ? parseInt(searchParams.get('page'), 10) : 1;
+
     const [state, setState] = useState<UseTasksState>({
         tasks: [],
         isLoading: false,
@@ -70,20 +74,23 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
         }));
     }, []);
 
-    const fetchTasks = useCallback(async (params?: PaginationParams): Promise<void> => {
+    const fetchTasks = useCallback(async (params?: PaginationParams & { search?: string }): Promise<void> => {
         const paginationParams = params || {
             page: state.pagination.currentPage,
             limit: ITEMS_PER_PAGE,
+            search: searchQuery,
         };
 
         setLoading(true);
         setError(null);
 
         try {
-            const response = await taskService.getTasks(paginationParams);
-            if(response.data.totalPages > 0 && initialPage > response.data.totalPages){
-                navigate('/')
-            }
+            const response = await taskService.getTasks({
+                page: paginationParams.page,
+                limit: paginationParams.limit,
+                searchQuery: paginationParams.search
+            });
+
             updatePagination(response);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to fetch tasks';
@@ -96,7 +103,7 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
         } finally {
             setLoading(false);
         }
-    }, [state.pagination.currentPage, setLoading, setError, toast, updatePagination]);
+    }, [searchQuery, setLoading, setError, toast, updatePagination]);
 
     const createTask = useCallback(async (taskData: CreateTaskRequest): Promise<void> => {
         if (!taskData.title.trim()) {
@@ -117,7 +124,12 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
                 description: 'Task created successfully',
             });
 
-            await fetchTasks({ page: initialPage, limit: ITEMS_PER_PAGE });
+            const pageToRefresh = searchQuery ? 1 : initialPage;
+            await fetchTasks({
+                page: pageToRefresh,
+                limit: ITEMS_PER_PAGE,
+                search: searchQuery || undefined
+            });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
             toast({
@@ -128,7 +140,16 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
         } finally {
             setOperationLoading(false);
         }
-    }, [toast, setOperationLoading, fetchTasks]);
+    }, [toast, setOperationLoading, fetchTasks, searchQuery, initialPage]);
+
+    const searchTask = useCallback(async (searchTerm: string): Promise<void> => {
+        if (!searchTerm.trim()) {
+            navigate('/');
+            return;
+        }
+
+        navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }, [navigate]);
 
     const updateTask = useCallback(async (id: string, title: string, description: string, isCompleted: boolean): Promise<void> => {
         if (!title.trim()) {
@@ -143,7 +164,11 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
         setOperationLoading(true);
 
         try {
-            const updatedTask = await taskService.updateTask(id, { title: title.trim(), description: description.trim(), isCompleted: isCompleted });
+            const updatedTask = await taskService.updateTask(id, {
+                title: title.trim(),
+                description: description.trim(),
+                isCompleted: isCompleted
+            });
 
             setState(prev => ({
                 ...prev,
@@ -222,17 +247,35 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
     const goToPage = useCallback(async (page: number): Promise<void> => {
         if (page < 1 || page > state.pagination.totalPages) return;
 
-        await fetchTasks({ page, limit: ITEMS_PER_PAGE });
-    }, [state.pagination.totalPages, fetchTasks]);
+        if (searchQuery) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}&page=${page}`);
+        } else {
+            navigate(`/tasks/${page}`);
+        }
 
-    const refetch = useCallback((): Promise<void> => {
-        return fetchTasks();
-    }, [fetchTasks]);
+        await fetchTasks({
+            page,
+            limit: ITEMS_PER_PAGE,
+            search: searchQuery || undefined
+        });
+    }, [state.pagination.totalPages, fetchTasks, searchQuery, navigate]);
 
     // Initial fetch
     useEffect(() => {
-        fetchTasks({ page: initialPage, limit: ITEMS_PER_PAGE });
-    }, []);
+        let pageToFetch: number;
+
+        if (searchQuery) {
+            pageToFetch = pageFromUrl || 1;
+        } else {
+            pageToFetch = initialPage;
+        }
+        
+        fetchTasks({
+            page: pageToFetch,
+            limit: ITEMS_PER_PAGE,
+            search: searchQuery || undefined
+        });
+    }, [searchQuery, pageFromUrl, initialPage, fetchTasks]);
 
     return {
         ...state,
@@ -241,6 +284,6 @@ export const useTasks = (initialPage: number): UseTasksReturn => {
         toggleTaskCompletion,
         deleteTask,
         goToPage,
-        refetch,
+        searchTask,
     };
 };

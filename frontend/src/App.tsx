@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Index from "./pages/Index";
 import TasksPage from "./pages/TasksPage";
@@ -32,8 +32,13 @@ const App = () => (
                     }
                 />
                 <Route
-                    path="/tasks"
-                    element={<Navigate to="/" replace />}
+                    path="/search"
+                    element={
+                        <>
+                            <Header />
+                            <TasksPage />
+                        </>
+                    }
                 />
                 <Route path="*" element={
                     <>

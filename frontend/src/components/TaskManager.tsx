@@ -1,7 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTasks } from '@/hooks/useTasks';
 import { TaskForm } from '@/components/TaskForm';
 import { TaskList } from '@/components/TaskList';
+import { SearchBar } from '@/components/SearchBar';
 import { PaginationControls } from '@/components/PaginationControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreateTaskRequest } from '@/types/task';
@@ -11,12 +13,18 @@ interface TaskManagerProps {
 }
 
 export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const initialSearchQuery = searchParams.get('q') || '';
+    const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+
     const {
         tasks,
         isLoading,
         isOperationLoading,
         pagination,
         createTask,
+        searchTask,
         updateTask,
         toggleTaskCompletion,
         deleteTask,
@@ -28,6 +36,14 @@ export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
         await createTask(taskData);
     }, [createTask]);
 
+    const handleSearch = useCallback((value: string) => {
+        searchTask(value);
+    }, [searchTask]);
+
+    const handleClear = useCallback(() => {
+        navigate('/');
+    }, [navigate]);
+
     const handlePageChange = useCallback(async (page: number): Promise<void> => {
         await goToPage(page);
     }, [goToPage]);
@@ -37,6 +53,20 @@ export const TaskManager: React.FC<TaskManagerProps> = ({ currentPage }) => {
             {/* Task Form */}
             <section className="mb-8" aria-label="Create new task">
                 <TaskForm onSubmit={handleCreateTask} isLoading={isOperationLoading} />
+            </section>
+            {/* Search */}
+            <section className="mb-6" aria-label="Search and actions">
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <div className="flex-1 w-full">
+                        <SearchBar
+                            value={searchQuery}
+                            onChange={setSearchQuery}
+                            onSearch={handleSearch}
+                            onClear={handleClear}
+                            placeholder="Search tasks by title or description..."
+                        />
+                    </div>
+                </div>
             </section>
             <Card>
                 <CardHeader>

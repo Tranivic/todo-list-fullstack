@@ -38,10 +38,14 @@ const handleApiResponse = async <T>(response: Response): Promise<T> => {
 };
 
 export const taskService = {
-    async getTasks(params: PaginationParams = { page: 1, limit: 10 }): Promise<TasksResponse> {
+    async getTasks(params: PaginationParams & { searchQuery?: string } = { page: 1, limit: 10 }): Promise<TasksResponse> {
         const url = new URL(API_BASE_URL);
         url.searchParams.set('page', params.page.toString());
         url.searchParams.set('limit', params.limit.toString());
+        
+        if (params.searchQuery && params.searchQuery.trim()) {
+            url.searchParams.set('search', params.searchQuery.trim());
+        }
 
         const response = await fetch(url.toString());
         return handleApiResponse<TasksResponse>(response);

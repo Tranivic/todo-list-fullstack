@@ -42,6 +42,7 @@ export interface TasksResponse {
 export interface PaginationParams {
     page: number;
     limit: number;
+    searchQuery?: string;
 }
 
 export interface ApiError {
