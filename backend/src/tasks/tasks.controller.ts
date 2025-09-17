@@ -31,10 +31,10 @@ export class TasksController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async findAll(
+    async fetchTasks(
         @Query() query: PaginationQueryDto,
     ): Promise<ApiResponseDto<PaginatedResponseDto<TaskResponseDto>>> {
-        const result = await this.tasksService.findAll(query.page, query.limit);
+        const result = await this.tasksService.fetchTasks(query.page, query.limit, query.search);
         return new ApiResponseDto(true, 'Tasks fetched successfully', result);
     }
 

@@ -39,21 +39,31 @@ export class TasksService {
         }
     }
 
-    async findAll(
+    async fetchTasks(
         page: number = 1,
         limit: number = 10,
+        search?: string,
     ): Promise<PaginatedResponseDto<TaskResponseDto>> {
         try {
-            this.logger.log(`Fetching tasks - Page: ${page}, Limit: ${limit}`);
+            this.logger.log(`Fetching tasks - Page: ${page}, Limit: ${limit}, Search: ${search || null}`);
+
+            let filteredTasks = this.tasks;
+
+            if (search) {
+                const searchLower = search.toLowerCase();
+                filteredTasks = filteredTasks.filter(task =>
+                    task.title.toLowerCase().includes(searchLower)
+                );
+            }
 
             const startIndex = (page - 1) * limit;
             const endIndex = startIndex + limit;
-            const totalPages = Math.ceil(this.tasks.length / limit);
-            const paginatedTasks = this.tasks.slice(startIndex, endIndex);
+            const totalPages = Math.ceil(filteredTasks.length / limit);
+            const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
 
             return {
                 items: paginatedTasks.map((task) => task.toResponseDto()),
-                total: this.tasks.length,
+                total: filteredTasks.length,
                 page,
                 limit,
                 totalPages,
@@ -62,10 +72,7 @@ export class TasksService {
             if (error instanceof BadRequestException) {
                 throw error;
             }
-            this.logger.error(
-                `Failed to fetch tasks: ${error.message}`,
-                error.stack,
-            );
+            this.logger.error(`Failed to fetch tasks: ${error.message}`, error.stack);
             throw new InternalServerErrorException('Failed to fetch tasks');
         }
     }
